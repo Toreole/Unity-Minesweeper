@@ -90,7 +90,7 @@ MonoBehaviour:
   image: {fileID: 6131324763264769125}
   defaultColor: {r: 0.8396226, g: 0.8396226, b: 0.8396226, a: 1}
   highlightColor: {r: 0.9528302, g: 0.9528302, b: 0.9528302, a: 1}
-  revealedColor: {r: 0.5377358, g: 0.367791, b: 0.367791, a: 1}
+  revealedColor: {r: 0.6320754, g: 0.6320754, b: 0.6320754, a: 1}
 --- !u!1 &6131324764642794558
 GameObject:
   m_ObjectHideFlags: 0

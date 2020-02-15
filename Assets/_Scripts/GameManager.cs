@@ -102,6 +102,8 @@ namespace Minesweeper
                 {
                     for (int x = 0; x < currentRes.width; x++)
                     {
+                        Tile t = tileMap[x, y];
+                        t._Reset();
                     }
                 }
             }
@@ -112,21 +114,29 @@ namespace Minesweeper
             firstClick = true;
         }
 
+        public void ResetGame()
+        {
+            ResetGameFor(resDropdown.value);
+        }
+
         void ResetGameFor(int index)
         {
             print("reee");
             //do this first.
             var res = gameSizes[index];
+            bool change = res != currentRes;
 
-            //adjust the window size:
-            int width = (int) Mathf.Max(minWidth, res.width * (tileSize + tileOffset));
-            print(width);
-            int height = res.height * (int)(tileSize + tileOffset) + marginTop + marginBottom;
-            print(height);
-            Screen.SetResolution(width, height, false);
+            if (change)
+            {
+                //adjust the window size:
+                int width = (int)Mathf.Max(minWidth, res.width * (tileSize + tileOffset));
+                print(width);
+                int height = res.height * (int)(tileSize + tileOffset) + marginTop + marginBottom;
+                print(height);
+                Screen.SetResolution(width, height, false);
+            }
 
             //init the game last.
-            bool change = res != currentRes;
             currentRes = res;
             InitGame(change);
         }
@@ -158,11 +168,87 @@ namespace Minesweeper
             if(c == 0)
             {
                 //todo: reveal around this one.
+                //FloodReveal(coords, 0);
+                FloodRevealQueue(coords);
                 return "";
             }
             return c.ToString(); //c: count of bombs around this location.
         }
         
+        //FloodReveal using a queue.
+        void FloodRevealQueue(Vector2Int start)
+        {
+            Queue<Vector2Int> tilesToCheck = new Queue<Vector2Int>();
+            tilesToCheck.Enqueue(start); //enqueue the first one.
+
+            while(tilesToCheck.Count > 0) //while there are still objects in the queue, continue operating.
+            {
+                Vector2Int current = tilesToCheck.Dequeue();
+                int bc = bombCount[current.x, current.y];
+                if(bc == 0)
+                {
+                    GatherAround(current);
+                }
+                tileMap[current.x, current.y].Reveal(bc);
+            }
+
+            void GatherAround(Vector2Int c)
+            {
+                for (int x = -1; x <= 1; x++) //offset on x
+                {
+                    int fx = c.x + x;
+                    if (fx < 0 || fx >= currentRes.width) //out of bounds
+                        continue;
+                    for (int y = -1; y <= 1; y++) //offset on y
+                    {
+                        int fy = c.y + y;
+                        if (fy < 0 || fy >= currentRes.height) //out of bounds
+                            continue;
+                        if (y == 0 && x == 0) //dont reveal self.
+                            continue;
+                        if(!tileMap[fx, fy].clicked) //only if it hasnt been revealed yet
+                        {
+                            tilesToCheck.Enqueue(new Vector2Int(fx, fy));
+                        }
+                    }
+                }
+            }
+        }
+
+        //This breaks everything, limiting depth is necessary, but doesnt work properly.
+        void FloodReveal(Vector2Int coords, int depth)
+        {
+            Tile tile;
+            int bc = 0;
+            for(int x = -1; x <= 1; x++) //offset on x
+            {
+                int fx = coords.x + x;
+                if (fx < 0 || fx >= currentRes.width) //out of bounds
+                    continue;
+                for(int y = -1; y <= 1; y++) //offset on y
+                {
+                    int fy = coords.y + y;
+                    if (fy < 0 || fy >= currentRes.height) //out of bounds
+                        continue;
+                    if (y == 0 && x == 0) //dont reveal self.
+                        continue;
+
+                    bc = bombCount[fx, fy]; //amount of bombs around this tile.
+                    tile = tileMap[fx, fy]; //bordering tile
+
+                    if (tile.clicked) //is already revealed
+                        continue;
+                    if (bc == 0 && depth < 16)
+                    {
+                        
+                        FloodReveal(new Vector2Int(fx, fy), depth + 1); //reveal around the next tile.
+                        
+                    }
+                    tile.Reveal(bc); //reveal the tile.
+                }
+            }
+        }
+
         private void Lose()
         {
             //TODO: lose the game.
@@ -196,7 +282,7 @@ namespace Minesweeper
                         int fy = bombLocation.y + y;
                         if (fy < 0 || fy >= currentRes.height) //outside of bounds
                             continue;
-                        if (fy == 0 && fy == fx) //is self
+                        if (y == 0 && y == fx) //is self
                             continue;
                         this.bombCount[fx, fy] += 1;
                     }

@@ -31,6 +31,7 @@ namespace Minesweeper
             {
                 clicked = true;
                 textField.text = GameManager.Click(coords);
+                image.color = revealedColor;
             }
         }
 
@@ -48,10 +49,11 @@ namespace Minesweeper
             image.color = defaultColor;
         }
 
-        public void Reveal(string x)
+        public void Reveal(int x)
         {
             clicked = true;
-            textField.text = x;
+            if(x > 0)
+                textField.text = x.ToString();
             image.color = revealedColor;
         }
 
