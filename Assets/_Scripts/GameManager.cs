@@ -67,6 +67,28 @@ namespace Minesweeper
             InitGame(true);
         }
 
+#if UNITY_EDITOR
+        private void Update()
+        {
+            if (firstClick)
+                return;
+            if (Input.GetKeyDown(KeyCode.F1))
+            {
+                for (int x = 0; x < currentRes.width; x++)
+                {
+                    for (int y = 0; y < currentRes.height; y++)
+                    {
+                        Tile tile = tileMap[x, y];
+                        if (bombs.Exists(b => b == new Vector2Int(x, y)))
+                            tile.Reveal("B"); //is bomb
+                        else //no bomb
+                            tile.Reveal(bombCount[x, y]);
+                    }
+                }
+            }
+        }
+#endif
+
         void InitGame(bool resChanged)
         {
             if (resChanged)
@@ -157,9 +179,10 @@ namespace Minesweeper
                 GenerateMap(coords);
             }
             //is the click a bomb??
-            bool clickIsBomb = bombs.Contains(coords);
+            bool clickIsBomb = bombs.Exists(x => x == coords);
             if(clickIsBomb)
             {
+                print("clicked a bomb");
                 //lose the game hahahaha noob >:)
                 Lose();
                 return "B";
@@ -188,6 +211,10 @@ namespace Minesweeper
                 if(bc == 0)
                 {
                     GatherAround(current);
+                }
+                if(bombs.Exists(x => x == current)) //check if the current check is a bomb
+                {
+                    continue;
                 }
                 tileMap[current.x, current.y].Reveal(bc);
             }
@@ -281,8 +308,6 @@ namespace Minesweeper
                     {
                         int fy = bombLocation.y + y;
                         if (fy < 0 || fy >= currentRes.height) //outside of bounds
-                            continue;
-                        if (y == 0 && y == fx) //is self
                             continue;
                         this.bombCount[fx, fy] += 1;
                     }

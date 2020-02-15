@@ -19,7 +19,9 @@ namespace Minesweeper
         public bool clicked = false;
         [HideInInspector, System.NonSerialized]
         public Vector2Int coords;
-        
+
+        bool flagged = false;
+
         void Awake()
         {
             image.color = defaultColor;
@@ -29,9 +31,18 @@ namespace Minesweeper
         {
             if(!clicked)
             {
-                clicked = true;
-                textField.text = GameManager.Click(coords);
-                image.color = revealedColor;
+                if (eventData.button == PointerEventData.InputButton.Left && !flagged)
+                {
+                    clicked = true;
+                    textField.text = GameManager.Click(coords);
+                    image.color = revealedColor;
+                }
+                else if (eventData.button == PointerEventData.InputButton.Right)
+                {
+                    flagged = !flagged;
+                    textField.text = flagged ? "?" : "";
+                    textField.color = flagged ? Color.red : Color.black;
+                }
             }
         }
 
@@ -57,11 +68,19 @@ namespace Minesweeper
             image.color = revealedColor;
         }
 
+        public void Reveal(string x)
+        {
+            clicked = true;
+            textField.text = x;
+            image.color = revealedColor;
+        }
+
         public void _Reset()
         {
             clicked = false;
             textField.text = "";
             image.color = defaultColor;
+            textField.color = Color.black;
         }
     }
 }
