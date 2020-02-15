@@ -18,10 +18,6 @@ namespace Minesweeper
         [HideInInspector, System.NonSerialized]
         public bool clicked = false;
         [HideInInspector, System.NonSerialized]
-        public int surroundingBombs;
-        [HideInInspector, System.NonSerialized]
-        public bool isBombSelf;
-        [HideInInspector, System.NonSerialized]
         public Vector2Int coords;
         
         void Awake()
@@ -31,23 +27,10 @@ namespace Minesweeper
 
         public void OnPointerClick(PointerEventData eventData)
         {
-            if(clicked)
+            if(!clicked)
             {
                 clicked = true;
-                if (isBombSelf)
-                {
-                    //todo: lose game.
-                }
-                else
-                {
-                    if(surroundingBombs == 0)
-                    {
-                        //todo: Game.RevealAround(Vector2 coords);
-                    }
-                    else
-                        textField.text = surroundingBombs.ToString();
-                    image.color = revealedColor;
-                }
+                textField.text = GameManager.Click(coords);
             }
         }
 
@@ -65,12 +48,18 @@ namespace Minesweeper
             image.color = defaultColor;
         }
 
-        public void Reveal()
+        public void Reveal(string x)
         {
             clicked = true;
-            if(surroundingBombs > 0)
-                textField.text = surroundingBombs.ToString();
+            textField.text = x;
             image.color = revealedColor;
+        }
+
+        public void _Reset()
+        {
+            clicked = false;
+            textField.text = "";
+            image.color = defaultColor;
         }
     }
 }

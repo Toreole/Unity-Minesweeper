@@ -260,11 +260,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 57f65f49f79b9e644865cd1f17ce839a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  marginTop: 0
-  marginBottom: 0
-  tileSize: 0
-  tileOffset: 0
-  minWidth: 0
+  marginTop: 100
+  marginBottom: 50
+  tileSize: 20
+  tileOffset: 1
+  minWidth: 500
   gameSizes:
   - width: 20
     height: 20
@@ -1170,10 +1170,10 @@ RectTransform:
   m_Father: {fileID: 1144373413}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -2}
-  m_SizeDelta: {x: -10, y: -14}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 1068, y: 466}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1007219805
 MonoBehaviour:
