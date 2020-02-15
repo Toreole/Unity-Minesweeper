@@ -81,6 +81,7 @@ namespace Minesweeper
             textField.text = "";
             image.color = defaultColor;
             textField.color = Color.black;
+            flagged = false;
         }
     }
 }
