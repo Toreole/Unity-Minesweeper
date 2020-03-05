@@ -117,6 +117,7 @@ namespace Minesweeper
                         tileMap[x, y] = temp;
                         temp.coords = new Vector2Int(x, y);
                         temp.clicked = false; //double check
+                        temp.isBomb = false;
                     }
                 }
             }
@@ -184,8 +185,8 @@ namespace Minesweeper
                 GenerateMap(coords);
             }
             //is the click a bomb??
-            bool clickIsBomb = bombs.Exists(x => x == coords);
-            if(clickIsBomb)
+            //bool clickIsBomb = bombs.Exists(x => x == coords);
+            if(tileMap[coords.x, coords.y].isBomb)
             {
                 print("clicked a bomb");
                 //lose the game hahahaha noob >:)
