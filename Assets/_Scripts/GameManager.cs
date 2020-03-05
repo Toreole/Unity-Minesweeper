@@ -294,13 +294,11 @@ namespace Minesweeper
                 {
                     t = tileMap[x, y];
                     //! bomb check doesnt need to be done -> already in Click()
-                    if (!t.isBomb && t.clicked) //tile not a bomb but already revealed.
+                    if (!t.isBomb) //tile not a bomb
                     {
-                        continue;
-                    }
-                    else //tile is not a bomb and not revealed. -> not over.
-                    {
-                        return;
+                        if(t.clicked)
+                            continue;//field has been revealed. -> win condition.
+                        return;//field has not been revealed -> not over yet.
                     }
                 }
             }
