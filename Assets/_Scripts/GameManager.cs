@@ -33,6 +33,9 @@ namespace Minesweeper
         [SerializeField]
         protected TMPro.TMP_Dropdown resDropdown;
 
+        [SerializeField]
+        protected GameObject winScreen, loseScreen;
+
         //runtime.
         private List<Vector2Int> bombs;
         private Tile[,] tileMap;
@@ -139,6 +142,8 @@ namespace Minesweeper
         public void ResetGame()
         {
             ResetGameFor(resDropdown.value);
+            loseScreen.SetActive(false);
+            winScreen.SetActive(false);
         }
 
         void ResetGameFor(int index)
@@ -184,17 +189,19 @@ namespace Minesweeper
             {
                 print("clicked a bomb");
                 //lose the game hahahaha noob >:)
-                Lose();
+                DoLose();
                 return "B";
             }
             int c = bombCount[coords.x, coords.y];
             if(c == 0)
             {
-                //todo: reveal around this one.
-                //FloodReveal(coords, 0);
-                FloodRevealQueue(coords);
+                //reveal around this one.
+                FloodReveal(coords);
+                //FloodRevealQueue(coords);
                 return "";
             }
+            //todo: check if the game is over.
+            CompletionCheck();
             return c.ToString(); //c: count of bombs around this location.
         }
         
@@ -242,8 +249,8 @@ namespace Minesweeper
             }
         }
 
-        //This breaks everything, limiting depth is necessary, but doesnt work properly.
-        void FloodReveal(Vector2Int coords, int depth)
+        //recursive reveal.
+        void FloodReveal(Vector2Int coords)
         {
             Tile tile;
             int bc = 0;
@@ -265,20 +272,50 @@ namespace Minesweeper
 
                     if (tile.clicked) //is already revealed
                         continue;
-                    if (bc == 0 && depth < 16)
+                    tile.Reveal(bc);
+                    //reveal the tile.
+                    if (bc == 0)
                     {
-                        
-                        FloodReveal(new Vector2Int(fx, fy), depth + 1); //reveal around the next tile.
-                        
+                        FloodReveal(new Vector2Int(fx, fy)); //reveal around the next tile.
                     }
-                    tile.Reveal(bc); //reveal the tile.
                 }
             }
         }
 
-        private void Lose()
+        /// <summary>
+        /// Run a completion check.
+        /// </summary>
+        void CompletionCheck()
         {
-            //TODO: lose the game.
+            Tile t; 
+            for(int x = 0; x <= currentRes.width; x++)
+            {
+                for(int y = 0; y <= currentRes.height; y++)
+                {
+                    t = tileMap[x, y];
+                    //! bomb check doesnt need to be done -> already in Click()
+                    if (!t.isBomb && t.clicked) //tile not a bomb but already revealed.
+                    {
+                        continue;
+                    }
+                    else //tile is not a bomb and not revealed. -> not over.
+                    {
+                        return;
+                    }
+                }
+            }
+            //-> all tiles are revealed, but no bombs -> game is won.
+            DoWin();
+        }
+
+        private void DoLose()
+        {
+            loseScreen.SetActive(true);
+        }
+
+        private void DoWin()
+        {
+            winScreen.SetActive(true);
         }
 
         /// <summary>
@@ -297,6 +334,7 @@ namespace Minesweeper
                 Vector2Int bombLocation = GetUniqueBombLocationOutsideCenter(start);
                 bombs.Add(bombLocation);
                 bc--;
+                tileMap[bombLocation.x, bombLocation.y].isBomb = true;
                 //horizontal offset
                 for(int x = -1; x <= 1; x++)
                 {

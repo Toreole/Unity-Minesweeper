@@ -19,6 +19,8 @@ namespace Minesweeper
         public bool clicked = false;
         [HideInInspector, System.NonSerialized]
         public Vector2Int coords;
+        [HideInInspector, System.NonSerialized]
+        public bool isBomb = false;
 
         bool flagged = false;
 
@@ -82,6 +84,7 @@ namespace Minesweeper
             image.color = defaultColor;
             textField.color = Color.black;
             flagged = false;
+            isBomb = false;
         }
     }
 }
