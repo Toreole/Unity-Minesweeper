@@ -6,6 +6,9 @@ using UnityEngine.EventSystems;
 
 namespace Minesweeper
 {
+    /// <summary>
+    /// An interactive Tile for Minesweeper.
+    /// </summary>
     public class Tile : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
     {
         [SerializeField]
@@ -26,19 +29,26 @@ namespace Minesweeper
 
         void Awake()
         {
+            //make sure to reset the default color.
             image.color = defaultColor;
         }
 
+        /// <summary>
+        /// Handle the click.
+        /// </summary>
+        /// <param name="eventData"></param>
         public void OnPointerClick(PointerEventData eventData)
         {
             if(!clicked)
             {
+                //left click -> reveal.
                 if (eventData.button == PointerEventData.InputButton.Left && !flagged)
                 {
                     clicked = true;
                     textField.text = GameManager.Click(coords);
                     image.color = revealedColor;
                 }
+                //right click -> flag this tile.
                 else if (eventData.button == PointerEventData.InputButton.Right)
                 {
                     flagged = !flagged;
@@ -62,6 +72,10 @@ namespace Minesweeper
             image.color = defaultColor;
         }
 
+        /// <summary>
+        /// Force reveal.
+        /// </summary>
+        /// <param name="x">the number of bombs around this tile.</param>
         public void Reveal(int x)
         {
             clicked = true;
@@ -70,6 +84,10 @@ namespace Minesweeper
             image.color = revealedColor;
         }
 
+        /// <summary>
+        /// Force reveal this tile.
+        /// </summary>
+        /// <param name="x">string to be displayed.</param>
         public void Reveal(string x)
         {
             clicked = true;
@@ -77,6 +95,9 @@ namespace Minesweeper
             image.color = revealedColor;
         }
 
+        /// <summary>
+        /// Reset the tile's data.
+        /// </summary>
         public void _Reset()
         {
             clicked = false;

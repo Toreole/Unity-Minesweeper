@@ -5,8 +5,12 @@ using System.Collections.Generic;
 
 namespace Minesweeper
 {
+    /// <summary>
+    /// The main component that runs the game.
+    /// </summary>
     public class GameManager : MonoBehaviour
     {
+        //private instance for static callbacks.
         private static GameManager _instance;
 
         [SerializeField]
@@ -37,7 +41,6 @@ namespace Minesweeper
         protected GameObject winScreen, loseScreen;
 
         //runtime.
-        private List<Vector2Int> bombs;
         private Tile[,] tileMap;
         private int[,] bombCount;
         private GameRes currentRes;
@@ -66,11 +69,13 @@ namespace Minesweeper
             resDropdown.onValueChanged.AddListener(ResetGameFor);
             
             currentRes = gameSizes[defaultSize];
-            bombs = new List<Vector2Int>();
             InitGame(true);
         }
 
 #if UNITY_EDITOR
+        /// <summary>
+        /// Testing generation. Not used anymore.
+        /// </summary>
         private void Update()
         {
             if (firstClick)
@@ -82,7 +87,7 @@ namespace Minesweeper
                     for (int y = 0; y < currentRes.height; y++)
                     {
                         Tile tile = tileMap[x, y];
-                        if (bombs.Exists(b => b == new Vector2Int(x, y)))
+                        if (tile.isBomb)
                             tile.Reveal("B"); //is bomb
                         else //no bomb
                             tile.Reveal(bombCount[x, y]);
@@ -92,9 +97,13 @@ namespace Minesweeper
         }
 #endif
 
+        /// <summary>
+        /// Initialize the game.
+        /// </summary>
+        /// <param name="resChanged">Has the resolution / gamesize changed?</param>
         void InitGame(bool resChanged)
         {
-            if (resChanged)
+            if (resChanged) //res has changed
             {
                 var holder = tileHolder as RectTransform;
                 //adjust the size so it BARELY fits.
@@ -121,7 +130,7 @@ namespace Minesweeper
                     }
                 }
             }
-            else
+            else //size has not changed.
             {
                 //reset the field. 
                 for (int y = 0; y < currentRes.height; y++)
@@ -136,10 +145,12 @@ namespace Minesweeper
 
             this.bombCount = new int[currentRes.width,currentRes.height];
             //reset the thingy
-            bombs.Clear();
             firstClick = true;
         }
 
+        /// <summary>
+        /// Reset the Game.
+        /// </summary>
         public void ResetGame()
         {
             ResetGameFor(resDropdown.value);
@@ -147,9 +158,12 @@ namespace Minesweeper
             winScreen.SetActive(false);
         }
 
+        /// <summary>
+        /// Reset the game using the resolution and the given index.
+        /// </summary>
+        /// <param name="index">index of the resolution</param>
         void ResetGameFor(int index)
         {
-            print("reee");
             //do this first.
             var res = gameSizes[index];
             bool change = res != currentRes;
@@ -169,7 +183,11 @@ namespace Minesweeper
             InitGame(change);
         }
 
-        //static interface for Tiles.
+        /// <summary>
+        /// Process a click on a tile.
+        /// </summary>
+        /// <param name="coords"></param>
+        /// <returns></returns>
         public static string Click(Vector2Int coords) => _instance._Click(coords);
 
         /// <summary>
@@ -198,7 +216,8 @@ namespace Minesweeper
             {
                 //reveal around this one.
                 FloodReveal(coords);
-                //FloodRevealQueue(coords);
+                //FloodRevealQueue(coords); outdated and weirdly slow
+                CompletionCheck();
                 return "";
             }
             //todo: check if the game is over.
@@ -206,7 +225,11 @@ namespace Minesweeper
             return c.ToString(); //c: count of bombs around this location.
         }
         
-        //FloodReveal using a queue.
+        /// <summary>
+        /// Flood Reveal with a queue. Slow'n'Stupid.
+        /// </summary>
+        /// <param name="start">the position at which so start the fill</param>
+        //[System.Obsolete] <- no actual attribute to avoid warnings lol
         void FloodRevealQueue(Vector2Int start)
         {
             Queue<Vector2Int> tilesToCheck = new Queue<Vector2Int>();
@@ -220,13 +243,14 @@ namespace Minesweeper
                 {
                     GatherAround(current);
                 }
-                if(bombs.Exists(x => x == current)) //check if the current check is a bomb
+                if(tileMap[current.x, current.y].isBomb) //check if the current check is a bomb
                 {
                     continue;
                 }
                 tileMap[current.x, current.y].Reveal(bc);
             }
 
+            ///Gather the next bunch of tiles.
             void GatherAround(Vector2Int c)
             {
                 for (int x = -1; x <= 1; x++) //offset on x
@@ -250,10 +274,13 @@ namespace Minesweeper
             }
         }
 
-        //recursive reveal.
+        /// <summary>
+        /// Flood Reveal all connected "0" tiles and their surroundings. Uses Recursion.
+        /// </summary>
+        /// <param name="coords">the start coordinates.</param>
         void FloodReveal(Vector2Int coords)
         {
-            Tile tile;
+            Tile tile; //tile
             int bc = 0;
             for(int x = -1; x <= 1; x++) //offset on x
             {
@@ -273,11 +300,10 @@ namespace Minesweeper
 
                     if (tile.clicked) //is already revealed
                         continue;
-                    tile.Reveal(bc);
-                    //reveal the tile.
-                    if (bc == 0)
+                    tile.Reveal(bc); //reveal this tile.
+                    if (bc == 0)//this is a "0" tile! reveal it's surroundings.
                     {
-                        FloodReveal(new Vector2Int(fx, fy)); //reveal around the next tile.
+                        FloodReveal(new Vector2Int(fx, fy));
                     }
                 }
             }
@@ -289,15 +315,15 @@ namespace Minesweeper
         void CompletionCheck()
         {
             Tile t; 
-            for(int x = 0; x <= currentRes.width; x++)
+            for(int x = 0; x < currentRes.width; x++)
             {
-                for(int y = 0; y <= currentRes.height; y++)
+                for(int y = 0; y < currentRes.height; y++)
                 {
                     t = tileMap[x, y];
                     //! bomb check doesnt need to be done -> already in Click()
                     if (!t.isBomb) //tile not a bomb
                     {
-                        if(t.clicked)
+                        if(t.clicked) //NOTE: could be rewritten do if(!t.clicked) return; but i like the way it looks rn.
                             continue;//field has been revealed. -> win condition.
                         return;//field has not been revealed -> not over yet.
                     }
@@ -307,21 +333,28 @@ namespace Minesweeper
             DoWin();
         }
 
+        /// <summary>
+        /// Show the losing screen.
+        /// </summary>
         private void DoLose()
         {
             loseScreen.SetActive(true);
         }
 
+
+        /// <summary>
+        /// Show the win screen.
+        /// </summary>
         private void DoWin()
         {
             winScreen.SetActive(true);
         }
 
         /// <summary>
-        /// Generates the bombs on the map.
+        /// Generates the bombs on the map. Can be relatively slow!
         /// </summary>
         /// <param name="start"></param>
-        //todo: this apparently freezes unity....
+        //TODO: could there be a better way to do this?
         void GenerateMap(Vector2Int start)
         {
             //bomb count is equal to the amount of tiles divided by some factor.
@@ -331,17 +364,18 @@ namespace Minesweeper
             {
                 //random location for the bomb:
                 Vector2Int bombLocation = GetUniqueBombLocationOutsideCenter(start);
-                bombs.Add(bombLocation);
-                bc--;
+
+                bc--; //one less bomb to generate.
                 tileMap[bombLocation.x, bombLocation.y].isBomb = true;
-                //horizontal offset
-                for(int x = -1; x <= 1; x++)
+                
+                //increase the "surrounding bombs" data of all tiles touching the bombLocation.
+                for(int x = -1; x <= 1; x++)//horizontal offset.
                 {
                     int fx = bombLocation.x + x;
                     if (fx < 0 || fx >= currentRes.width) //outside of bounds
                         continue;
                     //vertical offset
-                    for(int y = -1; y <= 1; y++)
+                    for(int y = -1; y <= 1; y++)//vertical offset.
                     {
                         int fy = bombLocation.y + y;
                         if (fy < 0 || fy >= currentRes.height) //outside of bounds
@@ -352,22 +386,32 @@ namespace Minesweeper
             }
         }
 
+        /// <summary>
+        /// Gets a random location on the map.
+        /// </summary>
+        /// <returns>the location</returns>
         Vector2Int GetRandomLocation()
         {
             return new Vector2Int(Random.Range(0, currentRes.width - 1), Random.Range(0, currentRes.height - 1));
         }
 
-        //brute force random locations on the field.
+        /// <summary>
+        /// Brute force a new unique bomb location recursively.
+        /// Might take a bunch of attempts.
+        /// </summary>
+        /// <param name="center">the center to avoid.</param>
+        /// <returns>a unique location</returns>
         Vector2Int GetUniqueBombLocationOutsideCenter(Vector2Int center)
         {
             Vector2Int val = new Vector2Int();
             val.x = Random.Range(0, currentRes.width - 1);
             val.y = Random.Range(0, currentRes.height - 1);
-            if (bombs.Exists(x => x.Equals(val)) || (InRange(val.x, center.x, 1) && InRange(val.y, center.y, 1)))
+            if (tileMap[val.x, val.y].isBomb || (InRange(val.x, center.x, 1) && InRange(val.y, center.y, 1)))
                 return GetUniqueBombLocationOutsideCenter(center);
             return val;
         }
 
+        //small helper.
         bool InRange(int point, int center, int radius) => Mathf.Abs(center - point) <= radius;
     }
 
@@ -375,20 +419,5 @@ namespace Minesweeper
     public class GameRes
     {
         public int width, height;
-    }
-    public class Int2
-    {
-        public int x, y;
-
-        public Int2()
-        {
-            this.x = 0;
-            this.y = 0;
-        }
-        public Int2(int x, int y)
-        {
-            this.x = x;
-            this.y = y;
-        }
     }
 }
