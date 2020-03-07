@@ -5,3 +5,5 @@ The project was made entirely in Unity 2018.4.17f1, but can easily be ported to 
 I started this because i was bored, but have now put some effort into cleaning and commenting the code.
 
 Anyone is allowed to download and edit this project, when giving credit to this repository (similar to how CC licenses work).
+
+Sidenote: Building the project and adding a background.jpg file to the <ProjectName>_Data folder will replace the gray background with the image. 
